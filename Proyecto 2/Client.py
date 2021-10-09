@@ -24,7 +24,6 @@ class Client:
         for line in sys.stdin:
             msg = line.rstrip()
             self.s.send(msg.encode())
-
             if msg == ":q":
                 res = self.s.recv(1024).decode()
                 break
