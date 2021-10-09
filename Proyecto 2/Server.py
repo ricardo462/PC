@@ -5,7 +5,7 @@ import json
 class Server:
     def __init__(self, artefactos_path = "artefactos.json", HOST = '127.0.0.1', PORT = 8889):
         
-
+    # rama ricardo
     # Se cargan los datos de los artefactos.
         with open(artefactos_path, "r") as j:
            self.artefactos = json.load(j)
