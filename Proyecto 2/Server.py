@@ -184,8 +184,9 @@ class Server:
                 #Vemos a con quien queremos hacer el intercambio
                 for user in new_users:
                     largo = len(user)
-                    if data[3:3+largo] == user:
-                        Id = data[3:3+largo]
+                    if data[7:7+largo] == user:
+                        Id = data[7:7+largo]
+                        print(Id)
 
 
                 for client in self.clientes_dict:
@@ -194,15 +195,19 @@ class Server:
 
                 largo = len(Id)
 
-                artId = data[6+largo:6+largo+2]
+                artId = data[8+largo:10+largo]
+                print(artId)
 
-                if int(artId) < 10:
-                    suArtId = data[6+largo+1:]
+                if artId[1] == ' ':
+                    miArtId = artId[0]
+                    suArtId = data[10+largo:]
 
-                if int(artId) >= 10:
-                    suArtId = data[6+largo+2:]
+                if artId[1] != ' ':
+                    miArtId = artId
+                    suArtId = data[11+largo:]
+                print(miArtId, suArtId)
 
-                intercambio_thread = threading.Thread(target=self.intercambio, args=(sock, exc_with, artId, suArtId))
+                intercambio_thread = threading.Thread(target=self.intercambio, args=(sock, exc_with, miArtId, suArtId))
                 intercambio_thread.start()
 
 
@@ -213,7 +218,7 @@ class Server:
                         if len(users)>0:
                             s.send(f"[SERVER] Los usuarios conectados son {', '.join(users)}".encode())
                         else: 
-                            s.send(f"CLIENTE {nombre}: {data}".encode())
+                            s.send(f"{nombre}: {data}".encode())
                     else:
                         if len(users)>0:
                             s.send(f"[SERVER] Los usuarios conectados son {', '.join(users)}".encode())
@@ -229,8 +234,8 @@ class Server:
             name1 = self.clientes_dict[client1]
             name2 = self.clientes_dict[client2]
 
-            client1.send(f"Yo: Quiero intercambiar un {artName1} por un {artName2} con {name2}".encode())
-            client2.send(f"[SERVER] CLIENTE {name1} quiere intercambiar un {artName1} por un {artName2}\n".encode())
+            client1.send(f"Yo: Quiero intercambiar mi {artName1} por el {artName2} de {name2}".encode())
+            client2.send(f"[SERVER] CLIENTE {name1} quiere intercambiar su {artName1} por tu {artName2}\n".encode())
             client2.send(f"Deseas proceder con el intercambio?[:accept/:reject]".encode())
 
             try:
@@ -250,7 +255,7 @@ class Server:
                     client1.send(f"[SERVER] {name2} no posee {artName2}. Se cancela el intercambio.".encode())
                     break
 
-                elif artId1 in self.arte_clientes[client1] and artId2 in self.arte_clientes:
+                else:
                     art_cliente1 = self.arte_clientes[client1]
                     art_cliente2 = self.arte_clientes[client2]
 
@@ -267,8 +272,10 @@ class Server:
 
 
             elif data==":reject":
-                client1.send(f"[SERVER] {name2} rechazó el intercambio.")
-                client2.send(f"[SERVER] Cancelaste el intercambio.")
+                client1.send(f"[SERVER] {name2} rechazó el intercambio.".encode())
+                client2.send(f"[SERVER] Cancelaste el intercambio.".encode())
+
+                break
 
             elif data!=":accept" or data!=":reject":
                 client2.send(f"[SERVER] Perdón, solo entiendo :accept o :reject :(".encode())
