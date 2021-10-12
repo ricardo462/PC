@@ -24,11 +24,10 @@ class Server:
         while True:
             # Se acepta la conexión de un cliente
             conn, addr = self.s.accept()
-            print("Cliente conectado")
             self.sock_clientes.append(conn)
 
             # Se manda el mensaje de bienvenida
-            conn.send("[SERVER]: ¡Bienvenid@ al chat de Granjerxs!".encode())
+            conn.send("¡Bienvenid@ al chat de Granjerxs!".encode())
             name_thread = threading.Thread(target=self.welcomy_function, args=(conn,))
             name_thread.start()
 
@@ -36,7 +35,7 @@ class Server:
             
 
     def welcomy_function(self, client):
-        client.send("[SERVER]: ¿Cuál es tu nombre?".encode())
+        client.send("\n[SERVER]: ¿Cuál es tu nombre?".encode())
         # Se pregunta por el nombre
         while True:
             try:
@@ -46,9 +45,11 @@ class Server:
             if data != '':
                 if data in self.clientes_dict.values():
                     client.send("[SERVER]: Nombre no disponible :(. Ingresa un nuevo nombre".encode())
-                else:                        
+                else: 
+                    with self.mutex:
+                        self.clientes_dict[client] = data
                     break
-
+        print(f'[SERVER] Cliente {data} conectado')
         # Se pregunta por los artefactos 
         preguntar = True
         while preguntar:
@@ -61,25 +62,28 @@ class Server:
                 # Cuando se obtiene una respuesta, se separan en unla lista por comas
                 if artefactos != '':
                     artefactos_list = artefactos.split(',')
-                    # Se registran los artefactos válidos
-                    traduccion = [self.artefactos.get(key) if key in self.artefactos.keys() else '' for key in artefactos_list]
-                    # Se consulta si es que los artefacots son los correctos
-                    client.send(f"[SERVER] Tus artefactos son: {', '.join(traduccion)}. ¿Está bien? (Sí/No)".encode())
-                    # Se espera una respuesta
-                    while True:
-                        try: 
-                            respuesta = client.recv(1024).decode()
-                        except:
-                            break
-                        if respuesta != '':
-                            if respuesta == 'Sí' or respuesta == 'sí' or respuesta == 'si':
-                                preguntar = False
-                            break
-                    break
+                    if len(artefactos_list) < 7:
+                        # Se registran los artefactos válidos
+                        traduccion = [self.artefactos.get(key) if key in self.artefactos.keys() else '' for key in artefactos_list]
+                        # Se consulta si es que los artefacots son los correctos
+                        client.send(f"[SERVER] Tus artefactos son: {', '.join(traduccion)}. ¿Está bien? (Sí/No)".encode())
+                        # Se espera una respuesta
+                        while True:
+                            try: 
+                                respuesta = client.recv(1024).decode()
+                            except:
+                                break
+                            if respuesta != '':
+                                respuesta = respuesta.lower()
+                                if respuesta == 'sí' or respuesta == 'si':
+                                    preguntar = False
+                                break
+                        break
+                    else:
+                        client.send('No puedes tener más de 6 artefactos. Ingresa nuevamente tus artefactos'.encode())
 
-        # Se agrega al cliente al registro
+        # Se agregan los artefactos al registro
         with self.mutex:
-            self.clientes_dict[client] = data
             self.arte_clientes[client] = artefactos_list
         # Se inicia el thread del cliente
         client_thread = threading.Thread(target=self.cliente, args=(client,))
@@ -101,7 +105,7 @@ class Server:
             print(data)
 
             if data == ":q":
-                sock.send("[SERVER]¡Adiós y suerte completando tu colección!".encode())
+                sock.send("¡Adiós y suerte completando tu colección!".encode())
                 
                 # Se modifican las variables usando un mutex.
                 with self.mutex:
@@ -110,7 +114,9 @@ class Server:
                 sock.close()
                 for conn in self.sock_clientes:
                     if conn != sock:
-                        conn.send(f"[SERVER] Cliente {self.clientes_dict[sock]} desconectado".encode())
+                        name = self.clientes_dict[sock]
+                        conn.send(f"[SERVER] Cliente {name} desconectado".encode())
+                        print(f'[SERVER] Cliente {name} desconectado')
                 break
 
             elif data == ":artefactos":
