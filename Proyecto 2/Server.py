@@ -210,11 +210,15 @@ class Server:
                 if artId[1] == ' ':
                     miArtId = artId[0]
                     suArtId = data[10+largo:]
-
+                        
                 #Obtenemos número del artefacto deseado (destinatario)
                 if artId[1] != ' ':
                     miArtId = artId
                     suArtId = data[11+largo:]
+
+                if len(suArtId)>2:
+                    sock.send(f"Existe algún error en la numeración de los artefactos. Recuerda que son desde el 1 al 42. Realiza el intercambio nuevamente".encode())
+                    continue
 
                 #Lanzamos thread para realizar el intercambio
                 intercambio_thread = threading.Thread(target=self.intercambio, args=(sock, exc_with, miArtId, suArtId))
@@ -248,6 +252,24 @@ class Server:
             artId1: número de artefacto ofrecido
             artId2: número de artefacto deseado
             """
+
+            #Verificamos existencia de artefactos
+            if int(artId1)<1 or int(artId1) > 42:
+                if int(artId2)<1 or int(artId2) > 42:
+                    client1.send(f"Ninguno de los artefactos existe:(. Se cancela el intercambio".encode())
+                    break
+                else: 
+                    client1.send(f"El artefacto con numeración {artId1} no existe:(. Se cancela el intercambio".encode())
+                    break
+
+            if int(artId2)<1 or int(artId2) > 42:
+                if int(artId1)<1 or int(artId1) > 42:
+                    client1.send(f"Ninguno de los artefactos existe:(. Se cancela el intercambio".encode())
+                    break
+                else: 
+                    client2.send(f"El artefacto con numeración {artId2} no existe:(. Se cancela el intercambio".encode())
+                    break
+            
             #Nombre de cada artefacto
             artName1 = self.artefactos[artId1]
             artName2 = self.artefactos[artId2]
