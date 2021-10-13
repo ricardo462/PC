@@ -112,6 +112,7 @@ class Server:
                 # Se modifican las variables usando un mutex.
                 with self.mutex:
                     self.sock_clientes.remove(sock)
+                    del self.clientes_dict[sock]
                     del self.arte_clientes[sock]
                     
                 sock.close()
