@@ -267,7 +267,7 @@ class Server:
                     client1.send(f"Ninguno de los artefactos existe:(. Se cancela el intercambio".encode())
                     break
                 else: 
-                    client2.send(f"El artefacto con numeración {artId2} no existe:(. Se cancela el intercambio".encode())
+                    client1.send(f"El artefacto con numeración {artId2} no existe:(. Se cancela el intercambio".encode())
                     break
             
             #Nombre de cada artefacto
